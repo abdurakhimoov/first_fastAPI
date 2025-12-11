@@ -104,3 +104,108 @@ def delete_product(product_id: int):
                 json.dump(data, f, indent=4)
             return {"SUCCESS": f'object deleted {delete_p}'}
     return {"error": "product not found"}
+
+
+############# employees ///////
+
+
+class Employee(BaseModel):
+    fullname: str
+    year: int
+
+class PartialEmployee(BaseModel):
+    fullname: Optional[str] = None
+    year: Optional[int] = None
+
+
+@app.get("/all_employees")
+def get_employees():
+    try:
+        with open("employees.json", 'r') as f:
+            data = json.load(f)
+    except:
+        data = []
+    
+    return data
+
+
+@app.post('/create_employee')
+def create_employee(employee: Employee):
+    try:
+        with open('employees.json', 'r') as f:
+            data = json.load(f)
+    except:
+        data = []
+    
+    new_id = len(data) + 1
+
+    employee_data = {
+        "id": new_id,
+        "fullname": employee.fullname,
+        "year": employee.year
+    }
+
+    data.append(employee_data)
+
+    with open("employees.json", 'w') as f:
+        json.dump(data, f, indent=4)
+    return {"SUCCESS object added": employee_data}
+
+
+@app.put("/update_employee/{employee_id}")
+def update_employee(employee_id: int, employee: Employee):
+    try:
+        with open("employees.json", 'r') as f:
+            data = json.load(f)
+    except:
+        return {"error": "No employee found"}
+    
+    for i in data:
+        if i["id"] == employee_id:
+            i["fullname"] = employee.fullname
+            i["year"] = employee.year
+
+            with open("employees.json", 'w') as f:
+                json.dump(data, f, indent=4)
+            return {"SUCCESS oject added": i}
+    return {"error": "object not found"}
+
+
+@app.patch("/update_partial_employee/{employee_id}")
+def partial_employee_update(employee_id: int, employee: PartialEmployee):
+    try:
+        with open("employees.json", 'r') as f:
+            data = json.load(f)
+    except:
+        return {"error": "NO employee found"}
+
+    for i in data:
+        if i["id"] == employee_id:
+            if employee.fullname is not None:
+                i["fullname"] = employee.fullname
+            if employee.year is not None:
+                i["year"] = employee.year
+            
+            with open("employees.json", 'w') as f:
+                json.dump(data, f, indent=4)
+            return {'success': i}
+        
+    return {'error': 'employee not found'}
+
+
+@app.delete("/delete_employee/{employee_id}")
+def delete_employee(employee_id: int):
+    try:
+        with open("employees.json", 'r') as f:
+            data = json.load(f)
+    except:
+        return {"error": "Employee not found"}
+    
+    for i, p, in enumerate(data):
+        if p["id"] == employee_id:
+            delete_employee = data.pop(i)
+
+            with open("employees.json", 'w') as f:
+                json.dump(data, f, indent=4)
+            return {"success object_deleted": delete_employee}
+    return {"error": "object not found"}
